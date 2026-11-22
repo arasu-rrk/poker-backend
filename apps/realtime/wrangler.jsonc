@@ -1,0 +1,76 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "planning-poker-realtime",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-12-10",
+  "compatibility_flags": ["nodejs_compat"],
+  "vars": {
+    "ENVIRONMENT": "development",
+    "REALTIME_ALLOWED_ORIGINS": "http://localhost:3000"
+  },
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "ROOMS",
+        "class_name": "PlanningPokerRoom"
+      }
+    ]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "planning-poker",
+      "database_id": "PLACEHOLDER_D1_DATABASE_ID"
+    }
+  ],
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["PlanningPokerRoom"]
+    }
+  ],
+  "env": {
+    "staging": {
+      "vars": {
+        "ENVIRONMENT": "staging",
+        "REALTIME_ALLOWED_ORIGINS": ""
+      },
+      "durable_objects": {
+        "bindings": [
+          {
+            "name": "ROOMS",
+            "class_name": "PlanningPokerRoom"
+          }
+        ]
+      },
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "planning-poker",
+          "database_id": "PLACEHOLDER_D1_DATABASE_ID"
+        }
+      ]
+    },
+    "production": {
+      "vars": {
+        "ENVIRONMENT": "production",
+        "REALTIME_ALLOWED_ORIGINS": ""
+      },
+      "durable_objects": {
+        "bindings": [
+          {
+            "name": "ROOMS",
+            "class_name": "PlanningPokerRoom"
+          }
+        ]
+      },
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "planning-poker",
+          "database_id": "PLACEHOLDER_D1_DATABASE_ID"
+        }
+      ]
+    }
+  }
+}
