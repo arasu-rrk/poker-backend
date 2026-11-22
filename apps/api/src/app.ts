@@ -3,6 +3,7 @@ import { cors } from "hono/cors";
 import { createCorrelationId } from "./correlation";
 import { structuredLog } from "./logger";
 import { registerHealthRoutes } from "./routes/health";
+import { registerOpenApiRoute } from "./routes/openapi";
 import type { ApiBindings } from "./types";
 
 export function createApp() {
@@ -39,6 +40,7 @@ export function createApp() {
   });
 
   registerHealthRoutes(app);
+  registerOpenApiRoute(app);
 
   app.notFound((context) =>
     context.json(
