@@ -35,4 +35,15 @@ describe("API health endpoints", () => {
     );
     expect(response.headers.get("x-correlation-id")).toBe("test-correlation-id");
   });
+
+  it("serves the shared OpenAPI document", async () => {
+    const response = await createApp().request("/openapi.json", {}, bindings);
+    expect(response.status).toBe(200);
+    const document = await response.json();
+    expect(document).toMatchObject({
+      openapi: "3.1.0",
+      info: { title: "Planning Poker API" },
+      components: { schemas: { Room: expect.any(Object) } }
+    });
+  });
 });

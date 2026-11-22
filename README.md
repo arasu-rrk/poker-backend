@@ -152,3 +152,46 @@ pnpm db:seed
 Wrangler migration SQL is stored under `packages/database/migrations`; both Worker applications expose
 an app-local `migrations` symlink to that single source. D1 does not support an automatic migration rollback.
 Recovery is performed by restoring a database backup or adding a reviewed forward recovery migration.
+
+## Shared API contracts
+
+`packages/contracts` is the runtime and TypeScript contract source for REST DTOs, errors, pagination,
+authentication, room state, voting privacy, and versioned WebSocket messages. Zod schemas and inferred
+types are exported to both Workers; duplicate protocol definitions must not be added in application code.
+
+REST success responses use `{ "data": ... }`. Paginated responses use `{ "data": [...], "pagination": {
+"page", "pageSize", "totalItems", "totalPages" } }`. REST errors use:
+
+```json
+{
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Invalid input",
+    "correlationId": "request-id",
+    "details": []
+  }
+}
+```
+
+Supported error codes are `VALIDATION_ERROR`, `UNAUTHORIZED`, `FORBIDDEN`, `NOT_FOUND`, `CONFLICT`,
+and `INTERNAL_ERROR`. Pagination queries support `page`, `pageSize`, `search`, `sortBy`, and
+`sortDirection`.
+
+WebSocket messages use a versioned envelope:
+
+```ts
+{
+  version: "1",
+  type: "SELECT_VOTE",
+  messageId: "uuid",
+  timestamp: "ISO-8601 timestamp",
+  payload: {}
+}
+```
+
+Before reveal, public snapshots and events contain only participant identity and `hasVoted`; they never
+contain hidden numeric or special values. Revealed vote values are available only through revealed-state
+and voting-results schemas.
+
+OpenAPI 3.1 JSON is available from `GET /openapi.json` on the API Worker. It reuses Zod-generated JSON
+schemas from `packages/contracts`.
