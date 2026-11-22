@@ -1,0 +1,49 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "planning-poker-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-12-10",
+  "compatibility_flags": ["nodejs_compat"],
+  "vars": {
+    "ENVIRONMENT": "development",
+    "API_ALLOWED_ORIGINS": "http://localhost:3000",
+    "LOG_LEVEL": "info"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "planning-poker",
+      "database_id": "PLACEHOLDER_D1_DATABASE_ID"
+    }
+  ],
+  "env": {
+    "staging": {
+      "vars": {
+        "ENVIRONMENT": "staging",
+        "API_ALLOWED_ORIGINS": "",
+        "LOG_LEVEL": "info"
+      },
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "planning-poker",
+          "database_id": "PLACEHOLDER_D1_DATABASE_ID"
+        }
+      ]
+    },
+    "production": {
+      "vars": {
+        "ENVIRONMENT": "production",
+        "API_ALLOWED_ORIGINS": "",
+        "LOG_LEVEL": "warn"
+      },
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "planning-poker",
+          "database_id": "PLACEHOLDER_D1_DATABASE_ID"
+        }
+      ]
+    }
+  }
+}
