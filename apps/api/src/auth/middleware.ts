@@ -1,6 +1,7 @@
 import type { Context, Next } from "hono";
 import type { ApiBindings } from "../types";
 import { verifyAccessToken } from "./crypto";
+import { AUTH_ERROR_CODES } from "./constants";
 
 export async function requireAccessToken(
   context: Context<{ Bindings: ApiBindings }>,
@@ -22,7 +23,7 @@ export async function requireAccessToken(
   }
   try {
     const secret = context.env.JWT_SECRET;
-    if (!secret) throw new Error("JWT_SECRET_NOT_CONFIGURED");
+    if (!secret) throw new Error(AUTH_ERROR_CODES.jwtSecretNotConfigured);
     const claims = await verifyAccessToken(secret, token);
     void claims;
     await next();

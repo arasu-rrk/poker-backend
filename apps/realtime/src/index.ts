@@ -1,5 +1,6 @@
 import { PlanningPokerRoom } from "./room";
 import type { RealtimeBindings } from "./types";
+import { REALTIME_ERROR_CODES } from "./constants";
 
 export { PlanningPokerRoom };
 
@@ -32,7 +33,7 @@ export default {
     const roomId = decodeURIComponent(roomMatch[1] ?? "");
     if (!roomId) {
       return Response.json(
-        { error: "INVALID_ROOM", message: "Room ID is required" },
+        { error: REALTIME_ERROR_CODES.invalidRoom, message: "Room ID is required" },
         { status: 400 }
       );
     }
@@ -40,7 +41,7 @@ export default {
     if (!ticket) {
       return Response.json(
         {
-          error: "CONNECTION_TICKET_REQUIRED",
+          error: REALTIME_ERROR_CODES.connectionTicketRequired,
           message: "A single-use connection ticket is required"
         },
         { status: 401 }
@@ -48,7 +49,10 @@ export default {
     }
     if (!env.DB) {
       return Response.json(
-        { error: "DATABASE_NOT_CONFIGURED", message: "Realtime authentication is unavailable" },
+        {
+          error: REALTIME_ERROR_CODES.databaseNotConfigured,
+          message: "Realtime authentication is unavailable"
+        },
         { status: 503 }
       );
     }
@@ -76,7 +80,10 @@ export default {
       storedTicket.expires_at <= Date.now()
     ) {
       return Response.json(
-        { error: "INVALID_CONNECTION_TICKET", message: "Ticket is invalid or expired" },
+        {
+          error: REALTIME_ERROR_CODES.invalidConnectionTicket,
+          message: "Ticket is invalid or expired"
+        },
         { status: 401 }
       );
     }
@@ -88,7 +95,10 @@ export default {
       .run();
     if (!consumed.success) {
       return Response.json(
-        { error: "CONNECTION_TICKET_REPLAY", message: "Ticket has already been used" },
+        {
+          error: REALTIME_ERROR_CODES.connectionTicketReplay,
+          message: "Ticket has already been used"
+        },
         { status: 401 }
       );
     }

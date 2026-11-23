@@ -9,6 +9,7 @@ import { AuthRepository } from "./repository";
 import { AuthService } from "./service";
 import { requireAccessToken } from "./middleware";
 import { verifyAccessToken } from "./crypto";
+import { AUTH_CONSTANTS, AUTH_COOKIE_NAMES, AUTH_ERROR_CODES } from "./constants";
 import { validateOidcCallback } from "./oidc";
 
 type AuthApp = Hono<{ Bindings: ApiBindings }>;
@@ -28,7 +29,7 @@ function setRefreshCookie(
   refreshToken: string,
   expiresAt: number
 ): void {
-  setCookie(context, "refresh_token", refreshToken, {
+  setCookie(context, AUTH_COOKIE_NAMES.refreshToken, refreshToken, {
     httpOnly: true,
     secure: context.env.ENVIRONMENT !== "development",
     sameSite: "Lax",
@@ -140,26 +141,26 @@ export function registerAuthRoutes(app: AuthApp): void {
       context.env.AUTH_CALLBACK_URL ?? new URL("/api/v1/auth/callback", context.req.url).toString();
     const state = generateState();
     const codeVerifier = generateCodeVerifier();
-    setCookie(context, "oidc_state", state, {
+    setCookie(context, AUTH_COOKIE_NAMES.oidcState, state, {
       httpOnly: true,
       secure: context.env.ENVIRONMENT !== "development",
       sameSite: "Lax",
       path: "/api/v1/auth/callback",
-      maxAge: 600
+      maxAge: AUTH_CONSTANTS.oidcStateTtlSeconds
     });
-    setCookie(context, "oidc_verifier", codeVerifier, {
+    setCookie(context, AUTH_COOKIE_NAMES.oidcVerifier, codeVerifier, {
       httpOnly: true,
       secure: context.env.ENVIRONMENT !== "development",
       sameSite: "Lax",
       path: "/api/v1/auth/callback",
-      maxAge: 600
+      maxAge: AUTH_CONSTANTS.oidcStateTtlSeconds
     });
-    setCookie(context, "oidc_provider", provider, {
+    setCookie(context, AUTH_COOKIE_NAMES.oidcProvider, provider, {
       httpOnly: true,
       secure: context.env.ENVIRONMENT !== "development",
       sameSite: "Lax",
       path: "/api/v1/auth/callback",
-      maxAge: 600
+      maxAge: AUTH_CONSTANTS.oidcStateTtlSeconds
     });
 
     if (provider === "google") {
@@ -213,16 +214,16 @@ export function registerAuthRoutes(app: AuthApp): void {
   });
 
   app.get("/api/v1/auth/callback", async (context) => {
-    const provider = getCookie(context, "oidc_provider");
-    const state = getCookie(context, "oidc_state");
-    const codeVerifier = getCookie(context, "oidc_verifier");
+    const provider = getCookie(context, AUTH_COOKIE_NAMES.oidcProvider);
+    const state = getCookie(context, AUTH_COOKIE_NAMES.oidcState);
+    const codeVerifier = getCookie(context, AUTH_COOKIE_NAMES.oidcVerifier);
     const returnedState = context.req.query("state");
     const code = context.req.query("code");
     const error = context.req.query("error");
 
-    deleteCookie(context, "oidc_provider", { path: "/api/v1/auth/callback" });
-    deleteCookie(context, "oidc_state", { path: "/api/v1/auth/callback" });
-    deleteCookie(context, "oidc_verifier", { path: "/api/v1/auth/callback" });
+    deleteCookie(context, AUTH_COOKIE_NAMES.oidcProvider, { path: "/api/v1/auth/callback" });
+    deleteCookie(context, AUTH_COOKIE_NAMES.oidcState, { path: "/api/v1/auth/callback" });
+    deleteCookie(context, AUTH_COOKIE_NAMES.oidcVerifier, { path: "/api/v1/auth/callback" });
 
     const callbackValidation = validateOidcCallback({
       provider,
@@ -404,7 +405,7 @@ export function registerAuthRoutes(app: AuthApp): void {
         .safeParse(await context.req.json());
       if (body.success) bodyRefreshToken = body.data.refreshToken;
     }
-    const refreshToken = bodyRefreshToken ?? getCookie(context, "refresh_token");
+    const refreshToken = bodyRefreshToken ?? getCookie(context, AUTH_COOKIE_NAMES.refreshToken);
     if (!refreshToken) {
       return context.json(
         {
@@ -419,12 +420,13 @@ export function registerAuthRoutes(app: AuthApp): void {
     }
     try {
       const jwtSecret = context.env.JWT_SECRET;
-      if (!jwtSecret) throw new Error("JWT_SECRET_NOT_CONFIGURED");
+      if (!jwtSecret) throw new Error(AUTH_ERROR_CODES.jwtSecretNotConfigured);
       const service = new AuthService(new AuthRepository(context.env.DB), jwtSecret);
       const result = await service.refresh(refreshToken);
       return authResponse(context, result);
     } catch (error) {
-      const replayed = error instanceof Error && error.message === "REFRESH_REPLAY_DETECTED";
+      const replayed =
+        error instanceof Error && error.message === AUTH_ERROR_CODES.refreshReplayDetected;
       return context.json(
         {
           error: {
@@ -466,10 +468,10 @@ export function registerAuthRoutes(app: AuthApp): void {
       );
     }
     const parsed = logoutRequestSchema.safeParse(await context.req.json().catch(() => ({})));
-    const refreshToken = getCookie(context, "refresh_token");
+    const refreshToken = getCookie(context, AUTH_COOKIE_NAMES.refreshToken);
     const service = new AuthService(new AuthRepository(context.env.DB), context.env.JWT_SECRET);
     await service.logout(refreshToken ?? null, parsed.success && parsed.data.revokeAllSessions);
-    deleteCookie(context, "refresh_token", { path: "/api/v1/auth" });
+    deleteCookie(context, AUTH_COOKIE_NAMES.refreshToken, { path: "/api/v1/auth" });
     return context.json({ data: { loggedOut: true } });
   });
 
@@ -569,7 +571,7 @@ export function registerAuthRoutes(app: AuthApp): void {
     }
     try {
       const jwtSecret = context.env.JWT_SECRET;
-      if (!jwtSecret) throw new Error("JWT_SECRET_NOT_CONFIGURED");
+      if (!jwtSecret) throw new Error(AUTH_ERROR_CODES.jwtSecretNotConfigured);
       const service = new AuthService(new AuthRepository(context.env.DB), jwtSecret);
       const ticket = await service.createConnectionTicket(roomId, claims.sub);
       return context.json({
@@ -581,7 +583,7 @@ export function registerAuthRoutes(app: AuthApp): void {
       });
     } catch (error) {
       const message = error instanceof Error ? error.message : "";
-      if (message === "ROOM_NOT_FOUND") {
+      if (message === AUTH_ERROR_CODES.roomNotFound) {
         return context.json(
           {
             error: {

@@ -1,5 +1,6 @@
 import { createAccessToken, generateOpaqueToken, hashOpaqueToken } from "./crypto";
 import { AuthRepository, type StoredUser } from "./repository";
+import { AUTH_CONSTANTS, AUTH_ERROR_CODES } from "./constants";
 
 export interface AuthResult {
   accessToken: string;
@@ -61,16 +62,16 @@ export class AuthService {
     const session = await this.repository.findSessionByRefreshHash(refreshHash);
     const now = Date.now();
     if (!session || session.revoked_at !== null || session.expires_at <= now) {
-      throw new Error("INVALID_REFRESH_TOKEN");
+      throw new Error(AUTH_ERROR_CODES.invalidRefreshToken);
     }
 
     const user = await this.repository.findUserById(session.user_id);
-    if (!user) throw new Error("INVALID_REFRESH_TOKEN");
+    if (!user) throw new Error(AUTH_ERROR_CODES.invalidRefreshToken);
 
     const newRefreshToken = generateOpaqueToken();
     const newRefreshHash = await hashOpaqueToken(newRefreshToken);
     const newSessionId = crypto.randomUUID();
-    const expiresAt = now + 30 * 24 * 60 * 60 * 1000;
+    const expiresAt = now + AUTH_CONSTANTS.refreshTokenTtlMs;
     const rotated = await this.repository.rotateRefreshSession({
       oldSessionId: session.id,
       newSessionId,
@@ -79,7 +80,7 @@ export class AuthService {
       expiresAt,
       revokedAt: now
     });
-    if (!rotated) throw new Error("REFRESH_REPLAY_DETECTED");
+    if (!rotated) throw new Error(AUTH_ERROR_CODES.refreshReplayDetected);
 
     const accessToken = await createAccessToken(
       this.jwtSecret,
@@ -89,7 +90,7 @@ export class AuthService {
         provider: user.authentication_provider as "guest" | "google" | "microsoft",
         isGuest: Boolean(user.is_guest)
       },
-      900
+      AUTH_CONSTANTS.accessTokenTtlSeconds
     );
     return {
       accessToken,
@@ -123,13 +124,15 @@ export class AuthService {
     userId: string
   ): Promise<{ ticket: string; expiresAt: number }> {
     const room = await this.repository.findRoomOwner(roomId);
-    if (!room) throw new Error("ROOM_NOT_FOUND");
+    if (!room) throw new Error(AUTH_ERROR_CODES.roomNotFound);
     const membership = await this.repository.findRoomMembership(roomId, userId);
-    if (!membership && room.owner_id !== userId) throw new Error("ROOM_MEMBERSHIP_REQUIRED");
+    if (!membership && room.owner_id !== userId) {
+      throw new Error(AUTH_ERROR_CODES.roomMembershipRequired);
+    }
 
     const ticket = generateOpaqueToken();
     const ticketHash = await hashOpaqueToken(ticket);
-    const expiresAt = Date.now() + 60 * 1000;
+    const expiresAt = Date.now() + AUTH_CONSTANTS.connectionTicketTtlMs;
     await this.repository.createConnectionTicket({
       id: crypto.randomUUID(),
       ticketHash,
@@ -154,7 +157,7 @@ export class AuthService {
     const refreshToken = generateOpaqueToken();
     const refreshHash = await hashOpaqueToken(refreshToken);
     const sessionId = crypto.randomUUID();
-    const expiresAt = Date.now() + 30 * 24 * 60 * 60 * 1000;
+    const expiresAt = Date.now() + AUTH_CONSTANTS.refreshTokenTtlMs;
     await this.repository.createSession({
       id: sessionId,
       userId: user.id,
@@ -169,7 +172,7 @@ export class AuthService {
         provider: user.authentication_provider as "guest" | "google" | "microsoft",
         isGuest: Boolean(user.is_guest)
       },
-      900
+      AUTH_CONSTANTS.accessTokenTtlSeconds
     );
     return { accessToken, refreshToken, expiresAt, user, sessionId };
   }

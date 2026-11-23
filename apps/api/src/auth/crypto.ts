@@ -1,4 +1,5 @@
 import { SignJWT, jwtVerify } from "jose";
+import { AUTH_CONSTANTS, AUTH_ERROR_CODES, JWT_CONSTANTS } from "./constants";
 
 export interface AccessTokenClaims {
   sub: string;
@@ -10,27 +11,27 @@ export interface AccessTokenClaims {
 export async function createAccessToken(
   secret: string,
   claims: AccessTokenClaims,
-  expiresInSeconds = 900
+  expiresInSeconds = AUTH_CONSTANTS.accessTokenTtlSeconds
 ): Promise<string> {
   return new SignJWT({
     sid: claims.sid,
     provider: claims.provider,
     isGuest: claims.isGuest
   })
-    .setProtectedHeader({ alg: "HS256", typ: "JWT" })
+    .setProtectedHeader({ alg: JWT_CONSTANTS.algorithm, typ: JWT_CONSTANTS.type })
     .setSubject(claims.sub)
     .setIssuedAt()
-    .setIssuer("planning-poker")
-    .setAudience("planning-poker-api")
+    .setIssuer(JWT_CONSTANTS.issuer)
+    .setAudience(JWT_CONSTANTS.audience)
     .setExpirationTime(`${expiresInSeconds}s`)
     .sign(new TextEncoder().encode(secret));
 }
 
 export async function verifyAccessToken(secret: string, token: string): Promise<AccessTokenClaims> {
   const { payload } = await jwtVerify(token, new TextEncoder().encode(secret), {
-    issuer: "planning-poker",
-    audience: "planning-poker-api",
-    algorithms: ["HS256"]
+    issuer: JWT_CONSTANTS.issuer,
+    audience: JWT_CONSTANTS.audience,
+    algorithms: [JWT_CONSTANTS.algorithm]
   });
   if (
     typeof payload.sub !== "string" ||
@@ -40,7 +41,7 @@ export async function verifyAccessToken(secret: string, token: string): Promise<
       payload.provider !== "microsoft") ||
     typeof payload.isGuest !== "boolean"
   ) {
-    throw new Error("INVALID_ACCESS_TOKEN_CLAIMS");
+    throw new Error(AUTH_ERROR_CODES.invalidAccessTokenClaims);
   }
   return {
     sub: payload.sub,
@@ -51,7 +52,7 @@ export async function verifyAccessToken(secret: string, token: string): Promise<
 }
 
 export function generateOpaqueToken(): string {
-  const bytes = crypto.getRandomValues(new Uint8Array(32));
+  const bytes = crypto.getRandomValues(new Uint8Array(AUTH_CONSTANTS.opaqueTokenBytes));
   return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
