@@ -104,8 +104,8 @@ importers:
   packages/database:
     dependencies:
       drizzle-orm:
-        specifier: ^0.44.7
-        version: 0.44.7(@cloudflare/workers-types@5.20261122.2)(@types/better-sqlite3@9.6.0)(better-sqlite3@13.2.0)
+        specifier: ^0.45.2
+        version: 0.45.4(@cloudflare/workers-types@5.20261122.2)(@types/better-sqlite3@9.6.0)(better-sqlite3@13.2.0)
     devDependencies:
       "@cloudflare/workers-types":
         specifier: ^5.20261122.2
@@ -2036,10 +2036,10 @@ packages:
       }
     hasBin: true
 
-  drizzle-orm@0.44.7:
+  drizzle-orm@0.45.4:
     resolution:
       {
-        integrity: sha512-quIpnYznjU9lHshEOAYLoZ9s3jweleHlZIAWR/jX9gAWNg/JhQ1wj0KGRf7/Zm+obRrYd9GjPVJg790QY9N5AQ==
+        integrity: sha512-NiM1YZpJ2UxyeE67DpDDZ+Tsw4YLX3trSlkNT7Tm9eKoUNb1LvaAaQzXgYQsWs+AQ9TUmmwMmBOCXuqqxUWKKQ==
       }
     peerDependencies:
       "@aws-sdk/client-rds-data": ">=3"
@@ -2048,6 +2048,7 @@ packages:
       "@libsql/client": ">=0.10.0"
       "@libsql/client-wasm": ">=0.10.0"
       "@neondatabase/serverless": ">=0.10.0"
+      "@netlify/db": ">=0.4.0"
       "@op-engineering/op-sqlite": ">=2"
       "@opentelemetry/api": ^1.4.1
       "@planetscale/database": ">=1.13"
@@ -2083,6 +2084,8 @@ packages:
       "@libsql/client-wasm":
         optional: true
       "@neondatabase/serverless":
+        optional: true
+      "@netlify/db":
         optional: true
       "@op-engineering/op-sqlite":
         optional: true
@@ -4231,7 +4234,7 @@ snapshots:
       esbuild: 0.25.12
       tsx: 4.23.15
 
-  drizzle-orm@0.44.7(@cloudflare/workers-types@5.20261122.2)(@types/better-sqlite3@9.6.0)(better-sqlite3@13.2.0):
+  drizzle-orm@0.45.4(@cloudflare/workers-types@5.20261122.2)(@types/better-sqlite3@9.6.0)(better-sqlite3@13.2.0):
     optionalDependencies:
       "@cloudflare/workers-types": 5.20261122.2
       "@types/better-sqlite3": 9.6.0
