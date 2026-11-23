@@ -6,7 +6,8 @@
   "compatibility_flags": ["nodejs_compat"],
   "vars": {
     "ENVIRONMENT": "development",
-    "REALTIME_ALLOWED_ORIGINS": "http://localhost:3000"
+    "REALTIME_ALLOWED_ORIGINS": "http://localhost:3000",
+    "JWT_SECRET": "development-only-change-before-deployment"
   },
   "durable_objects": {
     "bindings": [

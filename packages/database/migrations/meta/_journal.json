@@ -8,6 +8,13 @@
       "when": 1795390093337,
       "tag": "0000_daily_christian_walker",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1795391841367,
+      "tag": "0001_luxuriant_karma",
+      "breakpoints": true
     }
   ]
 }

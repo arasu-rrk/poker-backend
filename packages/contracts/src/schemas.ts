@@ -36,6 +36,24 @@ export const authenticationSchema = z.discriminatedUnion("type", [
   })
 ]);
 
+export const guestAuthenticationRequestSchema = z.object({
+  displayName: z.string().trim().min(1).max(100)
+});
+
+export const refreshAuthenticationRequestSchema = z.object({
+  refreshToken: z.string().trim().min(32).optional()
+});
+
+export const logoutRequestSchema = z.object({
+  revokeAllSessions: z.boolean().optional().default(false)
+});
+
+export const connectionTicketResponseSchema = z.object({
+  ticket: z.string().min(32),
+  expiresAt: isoTimestampSchema,
+  roomId: uuidSchema
+});
+
 export const roomSettingsSchema = z
   .object({
     deck: z.enum(["fibonacci", "tshirt", "powers", "custom"]),

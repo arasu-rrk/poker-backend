@@ -195,3 +195,34 @@ and voting-results schemas.
 
 OpenAPI 3.1 JSON is available from `GET /openapi.json` on the API Worker. It reuses Zod-generated JSON
 schemas from `packages/contracts`.
+
+## Authentication
+
+Guest authentication creates a D1 user and 30-day refresh session. Google and Microsoft OpenID Connect use
+Arctic for authorization-code and PKCE flows and `jose` for ID-token verification. OIDC state and PKCE
+verifier values are stored in short-lived HttpOnly cookies and are compared during callback.
+
+Access tokens are signed HS256 JWTs with a 15-minute lifetime. Refresh tokens are random opaque values,
+stored only as SHA-256 hashes in `user_sessions`, and rotated on every refresh. Revoked or expired sessions
+are rejected; reuse of an already-rotated refresh token is treated as replay.
+
+Refresh and logout cookies are HttpOnly, `Secure` outside development, and `SameSite=Lax`. Mutating auth
+routes also verify the browser `Origin` against `API_ALLOWED_ORIGINS`. Cross-origin credentialed requests
+require CORS allowlisting. JWT secrets and OIDC client secrets must be supplied with Wrangler secrets,
+never committed to repository configuration:
+
+```bash
+wrangler secret put JWT_SECRET --config apps/api/wrangler.jsonc
+wrangler secret put GOOGLE_OIDC_CLIENT_SECRET --config apps/api/wrangler.jsonc
+wrangler secret put MICROSOFT_OIDC_CLIENT_SECRET --config apps/api/wrangler.jsonc
+```
+
+## Authorization
+
+The centralized policy distinguishes `OWNER`, `MODERATOR`, `PARTICIPANT`, and `OBSERVER`. Owners manage
+rooms and participants, moderators manage sessions, stories, settings, and reveals, participants may vote,
+and observers have read-only access. Room membership and role checks are enforced in backend services.
+
+The WebSocket connection flow requires `POST /api/v1/rooms/:roomId/connection-ticket` with a bearer access
+token. The response contains a 60-second opaque, single-use ticket. Only a SHA-256 ticket hash is stored
+in D1; the realtime Worker consumes and expires it atomically before forwarding the WebSocket upgrade.

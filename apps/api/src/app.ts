@@ -4,8 +4,8 @@ import { createCorrelationId } from "./correlation";
 import { structuredLog } from "./logger";
 import { registerHealthRoutes } from "./routes/health";
 import { registerOpenApiRoute } from "./routes/openapi";
+import { registerAuthRoutes } from "./auth/routes";
 import type { ApiBindings } from "./types";
-
 export function createApp() {
   const app = new Hono<{ Bindings: ApiBindings }>();
 
@@ -24,7 +24,8 @@ export function createApp() {
         origin: allowedOrigins,
         allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
         allowHeaders: ["Content-Type", "Authorization", "X-Correlation-ID"],
-        exposeHeaders: ["X-Correlation-ID"]
+        exposeHeaders: ["X-Correlation-ID"],
+        credentials: true
       })(context, next);
     } else {
       await next();
@@ -41,6 +42,7 @@ export function createApp() {
 
   registerHealthRoutes(app);
   registerOpenApiRoute(app);
+  registerAuthRoutes(app);
 
   app.notFound((context) =>
     context.json(

@@ -110,7 +110,10 @@ export const roomMembers = sqliteTable(
     }).onDelete("cascade"),
     uniqueIndex("uq_room_members_room_user").on(table.roomId, table.userId),
     index("idx_room_members_user_id").on(table.userId),
-    check("ck_room_members_role", sql`${table.role} in ('owner', 'facilitator', 'participant')`)
+    check(
+      "ck_room_members_role",
+      sql`${table.role} in ('owner', 'moderator', 'participant', 'observer')`
+    )
   ]
 );
 
@@ -266,5 +269,35 @@ export const auditLogs = sqliteTable(
     index("idx_audit_logs_room_created").on(table.roomId, table.createdAt),
     index("idx_audit_logs_actor_user_id").on(table.actorUserId),
     index("idx_audit_logs_entity").on(table.entityType, table.entityId)
+  ]
+);
+
+export const connectionTickets = sqliteTable(
+  "connection_tickets",
+  {
+    id: text("id").primaryKey(),
+    ticketHash: text("ticket_hash").notNull(),
+    roomId: text("room_id").notNull(),
+    userId: text("user_id").notNull(),
+    expiresAt: integer("expires_at").notNull(),
+    usedAt: integer("used_at"),
+    revokedAt: integer("revoked_at"),
+    createdAt: integer("created_at").notNull().default(timestampNow)
+  },
+  (table) => [
+    foreignKey({
+      name: "fk_connection_tickets_poker_rooms",
+      columns: [table.roomId],
+      foreignColumns: [pokerRooms.id]
+    }).onDelete("cascade"),
+    foreignKey({
+      name: "fk_connection_tickets_users",
+      columns: [table.userId],
+      foreignColumns: [users.id]
+    }).onDelete("cascade"),
+    uniqueIndex("uq_connection_tickets_ticket_hash").on(table.ticketHash),
+    index("idx_connection_tickets_room_id").on(table.roomId),
+    index("idx_connection_tickets_user_id").on(table.userId),
+    index("idx_connection_tickets_expires_at").on(table.expiresAt)
   ]
 );

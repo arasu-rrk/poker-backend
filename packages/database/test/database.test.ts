@@ -7,11 +7,13 @@ import { createD1Database } from "../src/client";
 function openMigratedDatabase(): DatabaseSync {
   const database = new DatabaseSync(":memory:");
   database.exec("PRAGMA foreign_keys = ON;");
-  const migrationUrl = new URL("../migrations/0000_daily_christian_walker.sql", import.meta.url);
-  const migrationPath = fileURLToPath(migrationUrl);
-  const sql = readFileSync(migrationPath, "utf8");
-  for (const statement of sql.split("--> statement-breakpoint")) {
-    if (statement.trim()) database.exec(statement);
+  for (const migrationFile of ["0000_daily_christian_walker.sql", "0001_luxuriant_karma.sql"]) {
+    const migrationUrl = new URL(`../migrations/${migrationFile}`, import.meta.url);
+    const migrationPath = fileURLToPath(migrationUrl);
+    const sql = readFileSync(migrationPath, "utf8");
+    for (const statement of sql.split("--> statement-breakpoint")) {
+      if (statement.trim()) database.exec(statement);
+    }
   }
   return database;
 }
@@ -96,5 +98,29 @@ describe("database foundation", () => {
         "INSERT INTO poker_rooms (id, room_code, name, owner_id) VALUES ('r2', 'DUPLICATE', 'Room Two', 'u1');"
       )
     ).toThrow();
+  });
+
+  it("stores hashed connection tickets and supports one-time use", () => {
+    const database = openMigratedDatabase();
+    database.exec(`
+      INSERT INTO users (id, display_name, authentication_provider, provider_user_id)
+      VALUES ('u1', 'User', 'guest', 'u1');
+      INSERT INTO poker_rooms (id, room_code, name, owner_id)
+      VALUES ('r1', 'TICKET1', 'Room', 'u1');
+      INSERT INTO connection_tickets (id, ticket_hash, room_id, user_id, expires_at)
+      VALUES ('ticket1', 'hashed-ticket', 'r1', 'u1', 2000000000000);
+    `);
+    const result = database
+      .prepare(
+        `select ticket_hash, room_id, user_id, used_at
+         from connection_tickets where id = 'ticket1'`
+      )
+      .get();
+    expect(result).toEqual({
+      ticket_hash: "hashed-ticket",
+      room_id: "r1",
+      user_id: "u1",
+      used_at: null
+    });
   });
 });
