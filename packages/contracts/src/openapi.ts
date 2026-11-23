@@ -2,11 +2,17 @@ import { z } from "zod";
 import {
   apiErrorSchema,
   errorResponseSchema,
+  invitationRequestSchema,
+  participantDisplayNameRequestSchema,
+  participantRoleRequestSchema,
   paginatedResponseSchema,
   paginationSchema,
   pokerSessionSchema,
   publicRoomSnapshotSchema,
+  roomCreateRequestSchema,
+  roomJoinRequestSchema,
   roomSchema,
+  roomUpdateRequestSchema,
   storySchema,
   successResponseSchema,
   userSchema,
@@ -36,6 +42,12 @@ export function createOpenApiDocument(): OpenApiDocument {
   const schemas: Record<string, JsonSchema> = {
     User: toJsonSchema(userSchema),
     Room: toJsonSchema(roomSchema),
+    RoomCreateRequest: toJsonSchema(roomCreateRequestSchema),
+    RoomUpdateRequest: toJsonSchema(roomUpdateRequestSchema),
+    RoomJoinRequest: toJsonSchema(roomJoinRequestSchema),
+    InvitationRequest: toJsonSchema(invitationRequestSchema),
+    ParticipantDisplayNameRequest: toJsonSchema(participantDisplayNameRequestSchema),
+    ParticipantRoleRequest: toJsonSchema(participantRoleRequestSchema),
     PokerSession: toJsonSchema(pokerSessionSchema),
     Story: toJsonSchema(storySchema),
     PublicRoomSnapshot: toJsonSchema(publicRoomSnapshotSchema),
@@ -94,6 +106,83 @@ export function createOpenApiDocument(): OpenApiDocument {
                       status: { type: "string", const: "ready" },
                       service: { type: "string" },
                       database: { type: "string", enum: ["configured", "not_configured"] }
+                    }
+                  },
+                  "/api/v1/rooms": {
+                    get: {
+                      operationId: "listRooms",
+                      responses: { "200": { description: "Rooms for the authenticated user" } }
+                    },
+                    post: {
+                      operationId: "createRoom",
+                      requestBody: {
+                        required: true,
+                        content: {
+                          "application/json": {
+                            schema: { $ref: "#/components/schemas/RoomCreateRequest" }
+                          }
+                        }
+                      },
+                      responses: { "201": { description: "Room created" } }
+                    }
+                  },
+                  "/api/v1/rooms/join": {
+                    post: {
+                      operationId: "joinRoom",
+                      requestBody: {
+                        required: true,
+                        content: {
+                          "application/json": {
+                            schema: { $ref: "#/components/schemas/RoomJoinRequest" }
+                          }
+                        }
+                      },
+                      responses: { "200": { description: "Joined room" } }
+                    }
+                  },
+                  "/api/v1/rooms/{roomId}": {
+                    get: {
+                      operationId: "getRoom",
+                      parameters: [
+                        { name: "roomId", in: "path", required: true, schema: { type: "string" } }
+                      ],
+                      responses: { "200": { description: "Room details" } }
+                    },
+                    patch: {
+                      operationId: "updateRoom",
+                      requestBody: {
+                        required: true,
+                        content: {
+                          "application/json": {
+                            schema: { $ref: "#/components/schemas/RoomUpdateRequest" }
+                          }
+                        }
+                      },
+                      responses: { "200": { description: "Room updated" } }
+                    },
+                    delete: {
+                      operationId: "deleteRoom",
+                      responses: { "200": { description: "Room archived" } }
+                    }
+                  },
+                  "/api/v1/rooms/{roomId}/invitations": {
+                    post: {
+                      operationId: "createRoomInvitation",
+                      requestBody: {
+                        required: true,
+                        content: {
+                          "application/json": {
+                            schema: { $ref: "#/components/schemas/InvitationRequest" }
+                          }
+                        }
+                      },
+                      responses: { "201": { description: "Invitation created" } }
+                    }
+                  },
+                  "/api/v1/rooms/{roomId}/participants": {
+                    get: {
+                      operationId: "listRoomParticipants",
+                      responses: { "200": { description: "Room participants" } }
                     }
                   }
                 }
