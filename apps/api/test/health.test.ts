@@ -5,7 +5,8 @@ import type { ApiBindings } from "../src/types";
 const bindings: ApiBindings = {
   ENVIRONMENT: "development",
   API_ALLOWED_ORIGINS: "http://localhost:3000",
-  LOG_LEVEL: "error"
+  LOG_LEVEL: "error",
+  JWT_SECRET: "test-secret"
 };
 
 describe("API health endpoints", () => {

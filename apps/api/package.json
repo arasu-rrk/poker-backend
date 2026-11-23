@@ -12,7 +12,9 @@
   "dependencies": {
     "@planning-poker/contracts": "workspace:*",
     "@planning-poker/database": "workspace:*",
+    "arctic": "^3.7.0",
     "hono": "^4.10.7",
+    "jose": "^6.2.18",
     "zod": "^4.1.13"
   },
   "devDependencies": {

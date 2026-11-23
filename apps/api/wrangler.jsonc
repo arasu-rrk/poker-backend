@@ -7,7 +7,9 @@
   "vars": {
     "ENVIRONMENT": "development",
     "API_ALLOWED_ORIGINS": "http://localhost:3000",
-    "LOG_LEVEL": "info"
+    "LOG_LEVEL": "info",
+    "JWT_SECRET": "development-only-change-before-deployment",
+    "AUTH_CALLBACK_URL": "http://localhost:8787/api/v1/auth/callback"
   },
   "d1_databases": [
     {
@@ -21,7 +23,8 @@
       "vars": {
         "ENVIRONMENT": "staging",
         "API_ALLOWED_ORIGINS": "",
-        "LOG_LEVEL": "info"
+        "LOG_LEVEL": "info",
+        "AUTH_CALLBACK_URL": ""
       },
       "d1_databases": [
         {
@@ -35,7 +38,8 @@
       "vars": {
         "ENVIRONMENT": "production",
         "API_ALLOWED_ORIGINS": "",
-        "LOG_LEVEL": "warn"
+        "LOG_LEVEL": "warn",
+        "AUTH_CALLBACK_URL": ""
       },
       "d1_databases": [
         {
