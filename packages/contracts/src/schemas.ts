@@ -76,7 +76,43 @@ export const roomSchema = z.object({
   deletedAt: isoTimestampSchema.nullable()
 });
 
-export const roomMemberRoleSchema = z.enum(["owner", "facilitator", "participant"]);
+export const roomMemberRoleSchema = z.enum(["owner", "moderator", "participant", "observer"]);
+export const roomCreateRequestSchema = z.object({
+  name: z.string().trim().min(1).max(100),
+  description: z.string().trim().max(500).nullable().optional(),
+  settings: roomSettingsSchema.optional()
+});
+export const roomUpdateRequestSchema = z
+  .object({
+    name: z.string().trim().min(1).max(100).optional(),
+    description: z.string().trim().max(500).nullable().optional(),
+    settings: roomSettingsSchema.optional()
+  })
+  .refine(
+    (value) =>
+      value.name !== undefined || value.description !== undefined || value.settings !== undefined,
+    { message: "At least one room field must be provided" }
+  );
+export const roomJoinRequestSchema = z
+  .object({
+    roomCode: roomCodeSchema.optional(),
+    invitationToken: z.string().trim().min(32).optional()
+  })
+  .refine((value) => Boolean(value.roomCode || value.invitationToken), {
+    message: "roomCode or invitationToken is required"
+  });
+export const invitationRequestSchema = z.object({
+  invitedEmail: z.email().optional(),
+  role: z.enum(["moderator", "participant", "observer"]).default("participant"),
+  expiresInSeconds: z.number().int().positive().max(604800).optional()
+});
+export const participantDisplayNameRequestSchema = z.object({
+  displayName: z.string().trim().min(1).max(100),
+  avatarUrl: z.url().nullable().optional()
+});
+export const participantRoleRequestSchema = z.object({
+  role: z.enum(["moderator", "participant", "observer"])
+});
 
 export const roomMemberSchema = z.object({
   id: uuidSchema,

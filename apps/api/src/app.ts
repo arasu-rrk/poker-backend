@@ -5,6 +5,7 @@ import { structuredLog } from "./logger";
 import { registerHealthRoutes } from "./routes/health";
 import { registerOpenApiRoute } from "./routes/openapi";
 import { registerAuthRoutes } from "./auth/routes";
+import { registerRoomRoutes } from "./rooms/routes";
 import type { ApiBindings } from "./types";
 export function createApp() {
   const app = new Hono<{ Bindings: ApiBindings }>();
@@ -43,6 +44,7 @@ export function createApp() {
   registerHealthRoutes(app);
   registerOpenApiRoute(app);
   registerAuthRoutes(app);
+  registerRoomRoutes(app);
 
   app.notFound((context) =>
     context.json(

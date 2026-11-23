@@ -301,3 +301,38 @@ export const connectionTickets = sqliteTable(
     index("idx_connection_tickets_expires_at").on(table.expiresAt)
   ]
 );
+
+export const roomInvitations = sqliteTable(
+  "room_invitations",
+  {
+    id: text("id").primaryKey(),
+    roomId: text("room_id").notNull(),
+    inviterUserId: text("inviter_user_id").notNull(),
+    invitedEmail: text("invited_email"),
+    invitedRole: text("invited_role").notNull().default("participant"),
+    invitationTokenHash: text("invitation_token_hash").notNull(),
+    expiresAt: integer("expires_at").notNull(),
+    acceptedAt: integer("accepted_at"),
+    revokedAt: integer("revoked_at"),
+    createdAt: integer("created_at").notNull().default(timestampNow)
+  },
+  (table) => [
+    foreignKey({
+      name: "fk_room_invitations_poker_rooms",
+      columns: [table.roomId],
+      foreignColumns: [pokerRooms.id]
+    }).onDelete("cascade"),
+    foreignKey({
+      name: "fk_room_invitations_inviter_users",
+      columns: [table.inviterUserId],
+      foreignColumns: [users.id]
+    }).onDelete("cascade"),
+    uniqueIndex("uq_room_invitations_token_hash").on(table.invitationTokenHash),
+    index("idx_room_invitations_room_id").on(table.roomId),
+    index("idx_room_invitations_invited_email").on(table.invitedEmail),
+    check(
+      "ck_room_invitations_role",
+      sql`${table.invitedRole} in ('moderator', 'participant', 'observer')`
+    )
+  ]
+);

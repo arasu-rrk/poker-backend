@@ -226,3 +226,21 @@ and observers have read-only access. Room membership and role checks are enforce
 The WebSocket connection flow requires `POST /api/v1/rooms/:roomId/connection-ticket` with a bearer access
 token. The response contains a 60-second opaque, single-use ticket. Only a SHA-256 ticket hash is stored
 in D1; the realtime Worker consumes and expires it atomically before forwarding the WebSocket upgrade.
+
+## Room management
+
+The REST API supports room creation, listing, lookup, updates, archival, code joining, invitations,
+participant listing, display-name updates, role changes, and removal.
+
+Room codes are randomly generated uppercase identifiers with 10 characters and retry on uniqueness
+conflicts. Invitations contain random opaque tokens with configurable expiry; only SHA-256 invitation
+hashes are stored in D1.
+
+Room owner and moderator roles may manage rooms and participants. Owners exclusively delete rooms.
+The owner membership cannot be changed or removed without an explicit ownership-transfer process.
+Room membership is unique by `(room_id, user_id)`, so repeated browser-tab joins or rejoining reactivate
+the existing membership instead of creating duplicates.
+
+Participant online status is derived from `last_seen_at` within a two-minute activity window.
+Audit logs record room creation, updates, deletion, participant joins, role changes, removals, and
+invitation creation.

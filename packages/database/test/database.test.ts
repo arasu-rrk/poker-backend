@@ -7,7 +7,11 @@ import { createD1Database } from "../src/client";
 function openMigratedDatabase(): DatabaseSync {
   const database = new DatabaseSync(":memory:");
   database.exec("PRAGMA foreign_keys = ON;");
-  for (const migrationFile of ["0000_daily_christian_walker.sql", "0001_luxuriant_karma.sql"]) {
+  for (const migrationFile of [
+    "0000_daily_christian_walker.sql",
+    "0001_luxuriant_karma.sql",
+    "0002_absurd_ken_ellis.sql"
+  ]) {
     const migrationUrl = new URL(`../migrations/${migrationFile}`, import.meta.url);
     const migrationPath = fileURLToPath(migrationUrl);
     const sql = readFileSync(migrationPath, "utf8");
